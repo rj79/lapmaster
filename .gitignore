@@ -1,1 +1,8 @@
 *~
+*.pyc
+.ok*
+venv
+doc/manual.html
+bibtime.txt
+testlog.csv
+
