@@ -4,7 +4,7 @@
     bibgen.py
 
     Generates a PDF of bibs that can be printed, based on the race
-    configuration files. Works in tandem with restore.py.
+    configuration files.
 
     :copyright: (c) 2016 by Robert Johansson.
     :license: BSD, see LICENSE for more details.

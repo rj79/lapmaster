@@ -5,6 +5,7 @@
 
     Backs up data with regular intervals so that another timekeeper computer
     can take over in case of failure in the primary computer.
+    Works in tandem with restore.py.
 
     :copyright: (c) 2016 by Robert Johansson.
     :license: BSD, see LICENSE for more details.
