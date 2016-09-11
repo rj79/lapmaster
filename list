@@ -1,5 +1,15 @@
 #!/usr/bin/env python
-# coding=utf-8
+# -*- coding: utf-8 -*-
+"""
+    list
+
+    Generates a list of participant names and their bib numbers. This is useful
+    to event staff at the event registration when participants check out their
+    start kit.
+
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
 
 import lmcore
 import argparse
@@ -9,7 +19,7 @@ import sys
 
 parser = argparse.ArgumentParser()
 args.enable_configdir_option(parser)
-options = args.get_options(parser) 
+options = args.get_options(parser)
 
 config = lmcore.loadConfig(options.c, options.p, options.t)
 if config is None:
@@ -28,8 +38,8 @@ for bib in bibs:
     else:
         teamname = config.getTeamNameByBib(bib)
     names.append((name, bib, classname, teamname))
- 
-outfile = options.i + "/name_list.csv"   
+
+outfile = options.i + "/name_list.csv"
 with open(outfile, 'w') as f:
     f.write("Namn,Nummer,Klass,Team\n")
     for line in sorted(names, key=lambda x: x[0]):
@@ -37,7 +47,7 @@ with open(outfile, 'w') as f:
 
 print "Wrote", outfile
 
-outfile = options.i + "/bib_list.csv"   
+outfile = options.i + "/bib_list.csv"
 with open(outfile, 'w') as f:
     f.write("Nummer,Namn,Klass,Team\n")
     for line in sorted(names, key=lambda x: x[1]):
