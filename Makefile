@@ -5,7 +5,7 @@ VENV=venv
 PYTHON=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
 
-doc_srcs += doc/manual.txt
+doc_srcs += doc/manual.md
 doc_target = doc/manual.html
 
 test_srcs += unittests/*.py
@@ -46,4 +46,4 @@ clean:
 
 envclean:
 	@rm -rf $(VENV)
-	@rm -rf $(OK_VENV)
+	@rm -rf $(OK_VENV) $(OK_PACKAGES)
