@@ -1,0 +1,101 @@
+.number { text-align: right; }
+
+.navbox {
+  position:relative;
+  padding-top: 0;
+  margin-top:0;
+  background-color: #cccccc;
+  margin-bottom:10px;
+}
+
+.navtable {
+  width: 100%;
+  border-collapse: collapse;
+  font-weight: bold;
+}
+
+.flexcontainer {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  height: 96vh;
+}
+
+.resultbox {
+  background-color: #334455;
+  border-style: solid;
+  border-color: black;
+  border-width: 1px;
+  border-radius: 9px;
+  margin: 0.5em;
+}
+
+.resulttable {
+  width: 100%;
+  border-collapse: separate;
+  border-style: none;
+  padding: 2px;
+}
+
+.teamname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 14em;
+}
+
+a { color: black; }
+a:link { text-decoration:none; }
+a:visited { text-decoration:none; }
+a:hover { color: #7788ee; }
+
+body {
+    background-color: #777777; color: #ffffff;
+    font-family: Verdana, Ariaxl, Sans-serif;
+    margin: 0px;
+    padding: 0px;
+}
+
+h2 {
+    margin: 0.4em 0.4em 0.2em 0.4em;
+    margin-left: 2em;
+    text-align: center;
+}
+
+table, td {
+    vertical-align: top;
+    text-align: left;
+}
+
+td {
+    padding: 2px 5px 1px 5px;
+    margin: 0px;
+}
+
+tr { color: #000000; }
+
+tbody > tr:nth-child(odd) { background-color: #fff0e0; }
+tbody > tr:nth-child(even) { background-color: #e0f0ff; }
+
+thead {
+    background-color: #334455;
+    padding: 5px;
+}
+
+tbody {
+    background-color: #ffffff;
+    padding: 5px
+}
+
+th {
+    font-size: 1.1em;
+    text-align: left;
+    padding-top: 4px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+    color: #fff;
+}

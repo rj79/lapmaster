@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    testscript
+
+    Runs a simple set of system-level tests.
+
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
+import lmcore
+
+LOGFILE = 'test-data/log-test.csv'
+CLASSES = 'test-data/classes-test.csv'
+PERSONS = 'test-data/persons-test.csv'
+TEAMS = 'test-data/teams-test.csv'
+
+config = lmcore.loadConfig(CLASSES, PERSONS, TEAMS)
+
+assert(config != None)
+assert(config != False)
+
+log = lmcore.loadLog(LOGFILE, config)
+assert(log != None)
+assert(log != False)
+
+report = lmcore.Report(config)
+assert(report != None)
+assert(report != False)
+
+assert(12 == len(config.getPersonBibList()))
+
+assert("Adam Solo" == config.getPersonNameByBib(1))
+assert("Adam Lagom" == config.getPersonNameByBib(7))
+
+assert("Tre Herrar" == config.getTeamNameByBib(7))
+assert("Tre Herrar" == config.getTeamNameByBib(8))
+assert("Tre Herrar" == config.getTeamNameByBib(9))
+assert("Tre Damer" == config.getTeamNameByBib(10))
+assert("Tre Damer" == config.getTeamNameByBib(11))
+assert("Tre Damer" == config.getTeamNameByBib(12))
+
+for line in open(LOGFILE):
+    report.update(line)
+
+assert(1314227943 == report.getStartTime(1))
+
+assert([(1314227944, 1), (1314228000, 1)] == report.getLapList(1))
+
+assert(report.getLapLog() == [(1314227944, 1), (1314227954, 3), \
+                              (1314227957, 2), (1314227960, 5), \
+                              (1314227963, 4), (1314227966, 6), \
+                              (1314228000, 1)])
+
+assert(report.getTeamRankings(1) == [1, 3, 2])

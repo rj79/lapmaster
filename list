@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# coding=utf-8
+
+import lmcore
+import argparse
+import args
+import re
+import sys
+
+parser = argparse.ArgumentParser()
+args.enable_configdir_option(parser)
+options = args.get_options(parser) 
+
+config = lmcore.loadConfig(options.c, options.p, options.t)
+if config is None:
+    print "Run this program in a directory that contains a race configuration."
+    sys.exit(1)
+
+bibs = config.getPersonBibList()
+names = []
+for bib in bibs:
+    name = config.getPersonNameByBib(bib)
+    if name[0:2] == "NN" or name[0:13] == "Efteranmälan":
+        continue
+    classname = config.getClassNameById(config.getClassIdByBib(bib))
+    if config.isSolo(bib):
+        teamname = ""
+    else:
+        teamname = config.getTeamNameByBib(bib)
+    names.append((name, bib, classname, teamname))
+ 
+outfile = options.i + "/name_list.csv"   
+with open(outfile, 'w') as f:
+    f.write("Namn,Nummer,Klass,Team\n")
+    for line in sorted(names, key=lambda x: x[0]):
+        f.write('%s,%d,%s,%s\n' % (line[0], line[1], line[2], line[3]))
+
+print "Wrote", outfile
+
+outfile = options.i + "/bib_list.csv"   
+with open(outfile, 'w') as f:
+    f.write("Nummer,Namn,Klass,Team\n")
+    for line in sorted(names, key=lambda x: x[1]):
+        f.write('%d,%s,%s,%s\n' % (line[1], line[0], line[2], line[3]))
+
+print "Wrote", outfile

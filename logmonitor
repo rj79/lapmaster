@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    logmonitor
+
+    This program monitors the log file for changes and notifies the publisher
+    if there are any changes.
+    
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
+import os
+import sys
+import argparse
+import socket
+import cProfile
+import args
+import httplib
+
+ADDRESS = "localhost"
+PORT = 8008
+
+def loadLog(path):
+    log = []
+    for line in open(path, 'r'):
+        log.append(line)
+    return log
+
+def message(text):
+    sys.stderr.write(text + os.linesep)
+
+class HTTPNotifier:
+    def __init__(self):
+        self.Conn = httplib.HTTPConnection("localhost", 5000)
+
+    def sendAll(self, text):
+        self.Conn.request("PUT", "/log", text)
+        response = self.Conn.getresponse()
+
+    def sendLine(self, text):
+        self.Conn.request("POST", "/log", text)
+        response = self.Conn.getresponse()
+
+class EventHandler():
+    def __init__(self, logpath, notifier):
+        self.LogPath = logpath
+        self.Log = []
+        self.Notifier = notifier
+        message("Watching " + logpath + " for modifications")
+
+    def process(self):
+        log = loadLog(self.LogPath)
+        if len(log) == len(self.Log) and \
+                log != self.Log or len(self.Log) == 0:
+            # Same log size, but different content.
+            text = ""
+            for line in log:
+                text += line
+            self.Notifier.sendAll(text)
+
+        elif len(log) > len(self.Log):
+            for line in log[len(self.Log):]:
+                self.Notifier.sendLine(line)
+
+        self.Log = list(log)
+
+class App():
+    def __init__(self, options, notifier):
+        self.Sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.Sock.bind((ADDRESS, PORT))
+        self.Handler = EventHandler(options.l, notifier)
+
+    def run(self):
+        self.Handler.process()
+        while True:
+            try:
+                data, addr = self.Sock.recvfrom(1024)
+                msg = int(data)
+                self.Handler.process()
+            except KeyboardInterrupt:
+                break
+            except RuntimeError:
+                break
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    args.enable_log_option(parser)
+    options = args.get_options(parser)
+
+    if options.l is None:
+        options.l = u"log.csv"
+
+    if not os.path.exists(options.l):
+        with open(options.l, 'w') as f:
+            message("Note: Log file " + options.l + " did not exist. " \
+                        "Created empty file.")
+
+    notifier = HTTPNotifier()
+    app = App(options, notifier)
+
+    try:
+        app.run()
+    except socket.error:
+        message("Could not connect to publisher. Start it first.")
+        sys.exit(-1)
+
+if __name__ == '__main__':
+    main()

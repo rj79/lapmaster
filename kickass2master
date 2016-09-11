@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""
+    kickass2master
+
+    Converts configuration files from the kickasstimer format to the lapmaster
+    format.
+
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
+import time
+import os
+import codecs
+
+def getClassInfoByClassId(classId):
+    if classId == 1:
+        return "1,1,Herrar Solo"
+    elif classId == 2:
+        return "2,1,Damer Solo"
+    elif classId == 3:
+        return "3,3,Lag 3p Mixed"
+    elif classId == 6:
+        return "6,6,Lag 6p Mixed"
+    else:
+        return "X,100,Kollektivet"
+
+def getClassIdByBib(bib):
+    b = int(bib)
+    if b in range(100, 199):
+        return 1
+    elif b in range(200,299):
+        return 2
+    elif b in range(3000, 3999):
+        return 3
+    elif b in range(6000, 6999):
+        return 6
+    else:
+        return 0
+
+def convertLog():
+    sourceLog = "bibtime.txt"
+    if not os.path.exists(sourceLog):
+        print ("Could not open " + sourceLog)
+        return
+
+    with open("log.csv", "w") as out:
+        for line in open(sourceLog):
+            time, bib = line.strip("\n").split("\t")
+            if bib == "all":
+                bib = "start all"
+            out.write(time + "," + bib + "\n")
+
+def convertPeople():
+    soloBibs = []
+    teamBibs = {}
+    foundClasses = set()
+
+    source = "people.txt"
+    if not os.path.exists(source):
+        print ("Could not open " + source)
+        return
+
+    # Persons
+    with open("persons.csv", "w") as personFile:
+        for line in codecs.open(source, "r", encoding="iso-8859-1"):
+            line = line.rstrip("\r\n\t")
+            tokens = line.split("\t")
+
+            if len(tokens) < 2:
+                continue
+
+            bib = tokens[0]
+            personName = tokens[1]
+
+            classId = getClassIdByBib(bib)
+            foundClasses.add(classId)
+
+            if len(tokens) == 2:
+                # Solo person
+                personFile.write("s," + str(classId) + "," + bib + "," + \
+                                     personName + "\n")
+            elif len(tokens) > 2:
+                teamName = tokens[2]
+                if not teamName in teamBibs:
+                    teamBibs[teamName] = []
+                teamBibs[teamName].append(bib)
+                personFile.write(bib + "," + personName + "\n")
+
+    # Teams
+    with open("teams.csv", "w") as teamFile:
+        for teamName, bibList in teamBibs.items():
+            teamFile.write(str(getClassIdByBib(bibList[0])) + "," + teamName)
+            for bib in bibList:
+                teamFile.write("," + bib)
+            teamFile.write("\n")
+    # Classes
+    with open("classes.csv", "w") as classFile:
+        for classId in foundClasses:
+            classFile.write(getClassInfoByClassId(classId) + "\n")
+
+convertLog()
+convertPeople()

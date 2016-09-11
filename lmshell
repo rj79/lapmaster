@@ -1,0 +1,450 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    lmshell
+
+    The Lapmaster shell. This program is used to register laps as participants
+    come in.
+    
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
+import sys
+import time
+import os
+import argparse
+import lmcore
+import readline
+import cProfile
+import args
+from lmcore.logger import Error, Note, Print
+
+INVALID = '-'
+UNDEFINED_PERSON = "!!!!"
+
+TAILSIZE = 5
+
+def getPersonText(bib, config):
+    text = str(bib).rjust(5) + " "
+    text += config.getPersonNameByBib(bib) + " "
+    if not config.isSolo(bib):
+        text += "(" + config.getTeamNameByBib(bib) + ") "
+    return text
+
+def showTail(config, log, size):
+    size = min(size, len(log))
+    tail = log.tail(size)
+    index = max(0, len(log) - size)
+
+    for entry in tail:
+        text = ""
+        t = entry[0]
+        timeText = time.strftime("%H:%M:%S", time.localtime(t))
+        if entry[1].isdigit():
+            bib = int(entry[1])
+            if not bib in config.getPersonBibList():
+                text = "UNKNOWN BIB"
+            else:
+                text = str(bib).rjust(4) + " " + \
+                    config.getPersonNameByBib(bib)
+                if not config.isSolo(bib):
+                    text += " (" + config.getTeamNameByBib(bib) + ")"
+        elif entry[1][:5] == "start":
+            tokens = entry[1].rsplit()
+            text = "start: "
+            first = True
+            for token in tokens[1:]:
+                if not first:
+                    text += ", "
+                first = False
+
+                if token.isdigit():
+                    cid = int(token)
+                    text += "%s (%d)" % (config.getClassNameById(cid), cid)
+                else:
+                    text += token
+        else:
+            text = entry[1]
+
+        print "[" + str(index).rjust(5) + "] " + timeText + " " + text
+
+        index += 1
+
+class Command:
+    def __init__(self, text, help):
+        self.Text = text
+        self.Help = help
+
+    def getText(self):
+        return self.Text
+
+    def syntax(self):
+        return ""
+
+    def execute(self, args):
+        Note(self.Text + ": Execute method not implemented.")
+        return False
+
+class CmdHelp(Command):
+    def __init__(self, commands):
+        Command.__init__(self, "help", "Type help <command> for more " \
+                         "detailed help. Example: help set.")
+        self.Commands = commands
+
+    def execute(self, args):
+        if len(args) == 0:
+            Print("To register a lap, simply type the number of the " \
+                  "participant followed by RETURN.")
+            Print("")
+            Print("Other commands:")
+            width = 0
+            for c in self.Commands:
+                width = max(width, len(c.Text) + 3)
+            for c in self.Commands:
+                Print(c.Text.ljust(width) + ": " + c.Help)
+        else:
+            found = False
+            for c in self.Commands:
+                if args[0] == c.getText():
+                    found = True
+                    syntax = c.syntax()
+                    if syntax:
+                        Print("Usage: " + c.getText() + " " + syntax)
+                    else:
+                        Print("No detailed help available")
+            if not found:
+                Print(args[0] + ": no help found")
+        return True
+
+class CmdStart(Command):
+    def __init__(self, config, log, logpath, startInfo):
+        Command.__init__(self, "start", "Start time.")
+        self.StartInfo = startInfo
+        self.Config = config
+        self.Log = log
+        self.LogPath = logpath
+
+    def syntax(self):
+        return "[ all | <class id1> [ <class id2> [ ... <class idN> ] ] ]"
+
+    def execute(self, args):
+        now = time.time()
+        if self.StartInfo.startClasses(args, now):
+            self.Log.append(now, "start " + " ".join(args))
+            lmcore.saveLog(self.Log, self.LogPath)
+            showTail(self.Config, self.Log, TAILSIZE)
+
+        return True
+
+class CmdSetLog(Command):
+    def __init__(self, config, log, logpath, startInfo):
+        Command.__init__(self, "set", "Change an event in the log.")
+        self.Config = config
+        self.Log = log
+        self.LogPath = logpath
+        self.StartInfo = startInfo
+
+    def syntax(self):
+        return "<log index> <bib>"
+
+    def execute(self, args):
+        if len(args) == 2:
+            if not args[0].isdigit():
+                Note("Index must be an integer")
+                return True
+
+            if not (args[1].isdigit() or args[1] == INVALID):
+                Note("Bib must be an integer or %s" % (INVALID))
+                return True
+
+            index = int(args[0])
+            if not self.Log.is_valid_index(index):
+                Note("Index must be in range 1 to " + str(len(self.Log) - 1))
+                return True
+
+            if self.Log.is_start(index):
+                Note("Can not modify a start event.")
+                return True
+
+            if args[1] == INVALID:
+                args[1] = UNDEFINED_PERSON
+            elif args[1].isdigit():
+                if not int(args[1]) in self.Config.Persons:
+                    args[1] = UNDEFINED_PERSON
+                else:
+                    cid = self.Config.getClassIdByBib(int(args[1]))
+                    if not self.StartInfo.isStarted(cid):
+                        Note("Class \"" \
+                             + self.Config.getClassNameById(cid) + "\"" + \
+                             + " has not yet started.")
+                        return True
+
+            self.Log.set(index, args[1])
+            lmcore.saveLog(self.Log, self.LogPath)
+
+            showTail(self.Config, self.Log, TAILSIZE)
+            return True
+        else:
+            return False
+
+class CmdClasses(Command):
+    def __init__(self, config):
+        Command.__init__(self, "classes", "Show classes.")
+        self.Config = config
+
+    def syntax(self):
+        return ""
+
+    def execute(self, args):
+        for cid in sorted(self.Config.getClassIdList()):
+            text = str(cid).rjust(5) + " "
+            text += self.Config.getClassNameById(cid) + " "
+            Print(text)
+        return True
+
+class CmdPersons(Command):
+    def __init__(self, config):
+        Command.__init__(self, "persons", "Show persons.")
+        self.Config = config
+
+    def syntax(self):
+        return "[ <bibs> | in class <class> ]"
+
+    def execute(self, args):
+        if len(args) == 0:
+            self.printPersons(sorted(self.Config.getPersonBibList()))
+            return True
+        try:
+            if args[0] == "in":
+                if args[1] == "class":
+                    cid = int(args[2])
+                    allBibs = self.Config.getPersonBibList()
+                    bibs = []
+                    for bib in allBibs:
+                        c = self.Config.getClassIdByBib(bib)
+                        if c == cid:
+                            bibs.append(bib)
+                    self.printPersons(bibs)
+                    return True
+            else:
+                bibs = []
+                for arg in args:
+                    bibs.append(int(arg))
+                self.printPersons(bibs)
+                return True
+
+        except IndexError:
+            return False
+        return False
+
+    def printPersons(self, bibs):
+        for bib in sorted(bibs):
+            Print(getPersonText(bib, self.Config))
+
+class CmdTeams(Command):
+    def __init__(self, config):
+        Command.__init__(self, "teams", "Show teams.")
+        self.Config = config
+
+    def syntax(self):
+        return "[ in class <class> ]"
+
+    def execute(self, args):
+        if len(args) == 0:
+            teams = filter(lambda x: not self.Config.isSolo(x),
+                           self.Config.getTeamIdList())
+            self.printTeams(sorted(teams))
+            return True
+        try:
+            if args[0] == "in":
+                if args[1] == "class":
+                    cid = int(args[2])
+                    self.printTeams(self.Config.getTeamIdsInClass(cid))
+                    return True
+            else:
+                teams = []
+                for arg in args:
+                    teams.append(self.Config.getTeamIdByBib(int(arg)))
+                self.printTeams(teams)
+                return True
+
+        except IndexError:
+            return False
+        return False
+
+    def printTeams(self, teams):
+        for team in sorted(teams):
+            text = self.Config.getTeamNameByBib(team) + "\n"
+            for bib in self.Config.getTeamBibsByBib(team):
+                text += getPersonText(bib, self.Config) + "\n"
+            Print(text)
+
+class CmdLog(Command):
+    def __init__(self, config, log):
+        Command.__init__(self, "log", "Show the log.")
+        self.Config = config
+        self.Log = log
+
+    def syntax(self):
+        return "<tail size>"
+
+    def execute(self, args):
+        tailSize = len(self.Log)
+        if len(args) > 0:
+            tailSize = min(tailSize, int(args[0]))
+        showTail(self.Config, self.Log, tailSize)
+        return True
+
+class Core:
+    class CmdReload(Command):
+        def __init__(self, core):
+            Command.__init__(self, "reload", "Reload the configuration.")
+            self.Core = core
+
+        def syntax(self):
+            return ""
+
+        def execute(self, args):
+            self.Core.request_reload()
+            return True
+
+    def __init__(self, config, log, startinfo, logpath, commands):
+        self.Config = config
+        self.Log = log
+        self.Startinfo = startinfo
+        self.LogPath = logpath
+        self.Running = True
+        self.Commands = commands
+        self.Commands.append(self.CmdReload(self))
+        self.ReloadRequested = False
+
+    def registerBib(self, bibText):
+        now = time.time()
+
+        validBib = True
+        try:
+            bib = int(bibText)
+            if not bib in self.Config.Persons:
+                Note("There is no person with bib " + str(bib))
+                validBib = False
+        except ValueError:
+            validBib = False
+
+        if not validBib:
+            self.Log.append(now, UNDEFINED_PERSON)
+            lmcore.saveLog(self.Log, self.LogPath)
+            return True
+
+        cid = self.Config.getClassIdByBib(bib)
+        if not self.Startinfo.isStarted(cid):
+            Error("You must first start class %s, \"%s\"" %
+                  (str(cid), self.Config.getClassNameById(cid)))
+            return False
+        else:
+            self.Log.append(now, bibText)
+            lmcore.saveLog(self.Log, self.LogPath)
+            return True
+        return False
+
+    def interpret(self, text):
+        tokens = text.rstrip('\n\r').rsplit()
+
+        if (len(tokens) == 0):
+            self.registerBib(UNDEFINED_PERSON)
+
+            showTail(self.Config, self.Log, TAILSIZE)
+            return
+
+        cmdText = tokens[0]
+
+        if cmdText == 'exit' or cmdText =='q':
+            self.Running = False
+            return
+
+        args = tokens[1:]
+
+        if cmdText.isdigit():
+            if self.registerBib(cmdText):
+                showTail(self.Config, self.Log, TAILSIZE)
+        else:
+            handled = False
+            for c in self.Commands:
+                if cmdText == c.getText():
+                    if not c.execute(args):
+                        Print("Usage: " + c.Text + " " + c.syntax())
+                    handled = True
+                    break
+            if not handled:
+                Print("Unknown command \"" + cmdText + "\"")
+
+    def get_input(self, prompt):
+        return raw_input(prompt)
+
+    def run(self):
+        while self.Running:
+            try:
+                text = self.get_input(": ")
+                self.interpret(text)
+            except KeyboardInterrupt:
+                print
+                break
+            except EOFError:
+                print
+                break
+
+    def request_reload(self):
+        self.ReloadRequested = True
+        self.Running = False
+
+    def reload_requested(self):
+        return self.ReloadRequested
+
+def main():
+    parser = argparse.ArgumentParser()
+    args.enable_configdir_option(parser)
+    args.enable_log_option(parser)
+    options = args.get_options(parser)
+
+    config = None
+
+    while True:
+        tryConfig = lmcore.loadConfig(options.c, options.p, options.t)
+        if not tryConfig:
+            if not config:
+                exit(1)
+            else:
+                Print("Keeping previously loaded configuration.")
+        else:
+            if not config:
+                Print("Type help and hit return for help.")
+            config = tryConfig
+
+        log, startInfo = lmcore.loadLog(options.l, config)
+
+        if log == None:
+            Print("Error in log.")
+            exit(1)
+
+        # Create empty log file if it does not exist
+        if not os.path.exists(options.l):
+            with open(options.l, "w") as f:
+                pass
+
+        Note("Opened log %s with %d lines." % (options.l, len(log)))
+        commands = []
+        commands.append(CmdStart(config, log, options.l, startInfo))
+        commands.append(CmdSetLog(config, log, options.l, startInfo))
+        commands.append(CmdClasses(config))
+        commands.append(CmdPersons(config))
+        commands.append(CmdTeams(config))
+        commands.append(CmdLog(config, log))
+        commands.append(CmdHelp(commands))
+
+        core = Core(config, log, startInfo, options.l, commands)
+        core.run()
+        if not core.reload_requested():
+            break
+
+if __name__ == "__main__":
+#    cProfile.run('main()', None, 'cumulative')
+    main()

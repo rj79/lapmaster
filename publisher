@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+    The publisher process waits for input from the log monitor process and
+    when it gets notified that there has been events in the log, it takes that
+    input and generates html pages with results.
+
+    :copyright: (c) 2016 by Robert Johansson.
+    :license: BSD, see LICENSE for more details.
+"""
+import sys
+import os
+import lmcore
+import argparse
+import htmlgen
+import bibcompat
+import args
+
+import flask
+
+parser = argparse.ArgumentParser()
+args.enable_configdir_option(parser)
+args.enable_log_option(parser)
+args.enable_class_option(parser)
+args.enable_person_option(parser)
+args.enable_team_option(parser)
+args.enable_output_option(parser)
+options = args.get_options(parser)
+
+config = lmcore.loadConfig(options.c, options.p, options.t)
+if not config:
+    sys.exit(1)
+
+report = lmcore.Report(config)
+htmlWriter = htmlgen.HTMLGenerator(config, report, options.o)
+bibWriter = bibcompat.BibWriter(options.l, options.o)
+
+app = flask.Flask(__name__)
+app.secret_key = os.urandom(24)
+app.versionStamp = 0
+
+def write():
+    htmlWriter.createPages(app.versionStamp)
+    bibWriter.update()
+
+@app.route('/versionstamp', methods=['GET'])
+def versionstamp():
+    return str(app.versionStamp)
+
+@app.route('/log', methods=['POST', 'PUT'])
+def log():
+    if flask.request.method == 'POST':
+        report.update(flask.request.data)
+    elif flask.request.method == 'PUT':
+        report.reset()
+        for line in flask.request.data.split('\n'):
+            if len(line) > 0:
+                report.update(line)
+    app.versionStamp += 1
+    write()
+    return "OK"
+
+if __name__ == "__main__":
+    app.debug = True
+    write()
+    app.run(host='0.0.0.0', threaded=True)

@@ -1,0 +1,37 @@
+- What is Lapmaster?
+
+  Lapmaster is a set of programs to do timekeeping for small sport events.
+  It was originally developed for the mountainbike event "ML12h" in Linköping,
+  Sweden.
+
+
+- What can Lapmaster do?
+
+  * Keep time for multiple classes in an event.
+  * Keep time for teams as well as solo participants.
+  * Keep time for events which have multiple laps.
+  * Publish live results with trends (in case of multi lap events).
+  * Provides a page with support for an event speaker.
+  * Can generate a PDF with printable bibs.
+
+
+- What notable limitations are there?
+
+  * Only in Swedish for now.
+
+
+- Where is the documentation?
+
+  * See the doc folder.
+
+
+- What do I need?
+
+  You will need python 2.7 and virtualenv. To build the documentation you also
+  need Multimarkdown.
+
+
+- Where are the tests?
+
+  Good that you ask! The tests are located in the folders unittests and
+  lmcore/unittests folder. Just run make and the unit tests will get executed.
