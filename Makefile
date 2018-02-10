@@ -1,7 +1,7 @@
 pyc = $(shell find . -name '*.pyc')
 srcs += *.py
 srcs += lmcore/*.py
-VENV=venv
+VENV=.venv
 PYTHON=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
 
@@ -12,7 +12,6 @@ test_srcs += unittests/*.py
 test_srcs += lmcore/unittests/*.py
 test_srcs += db_utils/*.py
 
-OK_VENV=.ok_venv
 OK_TEST=.ok_test
 OK_PACKAGES=.ok_packages
 OKS+=$(OK_VENV)
@@ -33,10 +32,10 @@ $(OK_TEST): $(srcs) $(test_srcs) $(OK_PACKAGES)
 	@PYTHONPATH=$$(pwd)/lmcore $(PYTHON) -m unittest discover
 	touch $@
 
-$(OK_VENV):
+$(VENV):
 	virtualenv $(VENV) && touch $@
 
-$(OK_PACKAGES): $(OK_VENV)
+$(OK_PACKAGES): $(VENV) requirements.txt
 	$(PIP) install -r requirements.txt && touch $@
 
 clean:
@@ -46,4 +45,4 @@ clean:
 
 envclean:
 	@rm -rf $(VENV)
-	@rm -rf $(OK_VENV) $(OK_PACKAGES)
+	@rm -f $(OK_PACKAGES)
