@@ -10,11 +10,11 @@
 """
 
 import os
-from clazz import Class
-from person import Person
-from team import Team
-from config import Config
-from logger import Error, Note, Print
+from .clazz import Class
+from .person import Person
+from .team import Team
+from .config import Config
+from .logger import Error, Note, Print
 
 class ConfigLoader:
     def __init__(self, classesFile, personsFile, teamsFile):
@@ -46,7 +46,7 @@ class ConfigLoader:
             return False
 
         # Check for unique team name
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if name == team.Name:
                 self.error("There is already a team called " + name)
                 return False
@@ -67,7 +67,7 @@ class ConfigLoader:
                                    + " is already in team.")
                     return False
 
-            for teamId, team in self.Teams.iteritems():
+            for teamId, team in self.Teams.items():
                 for b in team.BibList:
                     if bib == b:
                         self.error("Person with number "
@@ -109,7 +109,7 @@ class ConfigLoader:
                 self.error("There is already a class with number " \
                                + str(classid))
                 return False
-            for n, c in self.Classes.items():
+            for n, c in list(self.Classes.items()):
                 if c.Name == name:
                     self.error("There is already a class with name " \
                                    + name)
@@ -196,7 +196,7 @@ class ConfigLoader:
 
     def __str__(self):
         text = "Classes\n"
-        for n, c in self.Classes.iteritems():
+        for n, c in self.Classes.items():
             text += str(n) + "\t" + str(c) + '\n'
         text += "\nPersons\n"
         for k in sorted(self.Persons.keys()):
@@ -209,9 +209,9 @@ class ConfigLoader:
 def check(classes, persons, teams):
     # See if there is a person which is not in a team
     status = True
-    for personId, p in persons.iteritems():
+    for personId, p in persons.items():
         member = False
-        for teamId, t in teams.iteritems():
+        for teamId, t in teams.items():
             if t.isMember(p.Number):
                 member = True
                 break

@@ -12,6 +12,8 @@ import sys
 import os
 from logger import Error
 
+
+
 class StartInfo:
     def __init__(self, config):
         self.Config = config
@@ -40,7 +42,7 @@ class StartInfo:
                 Error("\"all\" can not be used with any other class")
                 return False
 
-            for classId, clazz in self.Config.Classes.iteritems():
+            for classId, clazz in self.Config.Classes.items():
                 startList.append(classId)
         else:
             for classIdText in classList:

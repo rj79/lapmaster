@@ -10,7 +10,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-from db_base import *
+from .db_base import *
 import os.path
 import codecs
 
@@ -18,7 +18,7 @@ class Rider:
     def __init__(self, id, bib, name, team, team_nid):
         self.id = id
         self.bib = bib
-        self.name = unicode(name)
+        self.name = str(name)
         self.team = team
         self.team_nid = team_nid
 
@@ -89,9 +89,9 @@ class CmdDeleteBibs:
         self.db = db
 
     def execute(self, args):
-        for nid, data in self.db.GetTeamsRiders().iteritems():
+        for nid, data in self.db.GetTeamsRiders().items():
             if data['bib'] != '':
-                Log(u'Delete bib for {}({})'.format(data['name'], data['bib']))
+                Log('Delete bib for {}({})'.format(data['name'], data['bib']))
                 db_res = self.db.SetRiderBib(nid, '')
         return ''
 
@@ -115,7 +115,7 @@ class CmdListRiders:
         res = self.db.GetTeamsRiders()
         riders = [Rider(nid, info['bib'], info['name'],
                         info['team_name'], info['team_nid'])
-                  for nid, info in res.iteritems()]
+                  for nid, info in res.items()]
 
         header = '\nID\tBIB\tNAME(TEAM)\n=========================='
         rider_repr = ['%s\t%s\t%s (%s, %s)' % (r.id, r.bib, r.name, r.team, r.team_nid) for r in sorted(riders)]
@@ -149,12 +149,12 @@ class CmdSetBib:
         riders = {nid : Rider(nid, info['bib'],
                               info['name'],
                               info['team_name'],
-                              info['team_nid']) for nid, info in res.iteritems()}
+                              info['team_nid']) for nid, info in res.items()}
 
-        for nid, r in sorted(riders.iteritems()):
+        for nid, r in sorted(riders.items()):
             if r.bib == '':
-                print u'Nid: {}, Rider: {}, Team: {}, Bib: {}'.format(nid, r.name,  r.team, r.bib)
-                print u'Propose bib: ',
+                print('Nid: {}, Rider: {}, Team: {}, Bib: {}'.format(nid, r.name,  r.team, r.bib))
+                print('Propose bib: ', end=' ')
                 resp = sys.stdin.readline().strip()
                 try:
                     bib = int(resp)
@@ -177,10 +177,10 @@ class DbParse:
         self.riders = self.db.GetTeamsRiders()
         # Fake a BIB number for all riders who have none set to make
         # files consistent
-        for nid, rider in self.riders.iteritems():
+        for nid, rider in self.riders.items():
             if len(rider['bib']) == 0:
                 self.riders[nid]['bib'] = -int(nid)
-                Log(u"Warning: {} has no BIB ({}).".format(rider['name'], -int(nid)))
+                Log("Warning: {} has no BIB ({}).".format(rider['name'], -int(nid)))
 
     def getPersons(self):
         if self.riders is None:
@@ -194,12 +194,12 @@ class DbParse:
         teams = {}
 
         # Create a dictionary for each team
-        for rider in self.riders.itervalues():
+        for rider in self.riders.values():
             if int(rider['class']) > 1:
                 teams[rider['team_nid']] = {}
                 teams[rider['team_nid']]['riders'] = []
 
-        for nid, rider in self.riders.iteritems():
+        for nid, rider in self.riders.items():
             if int(rider['class']) > 1:
                 teams[rider['team_nid']]['riders'].append(nid)
                 teams[rider['team_nid']]['name'] = rider['team_name']
@@ -232,15 +232,15 @@ class CmdCreateConfig:
 
     def createPersons(self):
         res = []
-        for rider in self.dbParse.getPersons().itervalues():
+        for rider in self.dbParse.getPersons().values():
             if int(rider['class']) == 0 or int(rider['class']) == 1:
                 # Solo rider
-                res.append(u's,{},{},{}'.format(rider['class'],
+                res.append('s,{},{},{}'.format(rider['class'],
                                                 rider['bib'],
                                                 rider['name']))
             else:
                 # Team rider
-                res.append(u'{},{}'.format(rider['bib'],
+                res.append('{},{}'.format(rider['bib'],
                                            rider['name']))
         return sorted(res)
 
@@ -249,12 +249,12 @@ class CmdCreateConfig:
         riders = self.dbParse.getPersons()
 
         res = []
-        for team in teams.itervalues():
+        for team in teams.values():
             rider_bibs = [str(riders[r]['bib']) for r in team['riders']]
             if team['name'].find(',') != -1:
-                Log(u"Warning: team name '{}' contains ','. "
+                Log("Warning: team name '{}' contains ','. "
                     "Removing ','.".format(team['name']))
-            res.append(u'{},{},{}'.format(team['class'],
+            res.append('{},{},{}'.format(team['class'],
                                           team['name'].replace(',', ' '),
                                           ','.join(rider_bibs)))
         return res
@@ -268,11 +268,11 @@ class CmdCreateConfig:
         dirname = args[1]
 
         with codecs.open(dirname + '/persons.csv', 'w', 'utf-8') as f:
-            f.write(u'\n'.join(self.createPersons()) + os.linesep)
+            f.write('\n'.join(self.createPersons()) + os.linesep)
         with codecs.open(dirname + '/teams.csv', 'w', 'utf-8') as f:
-            f.write(u'\n'.join(self.createTeams()) + os.linesep)
+            f.write('\n'.join(self.createTeams()) + os.linesep)
         with codecs.open(dirname + '/classes.csv', 'w', 'utf-8') as f:
-            f.write(u'\n'.join(self.createClasses()) + os.linesep)
+            f.write('\n'.join(self.createClasses()) + os.linesep)
 
         return 'Files written to directory {}.'.format(dirname)
 
@@ -300,7 +300,7 @@ class CmdProposeBib:
         for classid, minbib, maxbib in [(0, 101, 199), (1, 201, 299)]:
             classriders = [ {'nid': int(nid), 'name': r['name'], 'current_bib': int(r['bib']),
                              'proposed_bib': '',  'reason': '' }
-                            for nid, r in riders.iteritems() if int(r['class']) == classid]
+                            for nid, r in riders.items() if int(r['class']) == classid]
             used_bibs = [r['current_bib'] for r in classriders
                          if r['current_bib'] <= maxbib and r['current_bib'] >= minbib]
             bibs_to_use = [ i for i in range(maxbib, minbib-1, -1) if i not in used_bibs]
@@ -324,11 +324,11 @@ class CmdProposeBib:
         res = []
 
         # Get all bib series in use, i.e. bib/10 >= 301
-        used_series = {int(r['bib'])/10 for r in riders.itervalues() if int(r['bib']) > 3010}
-        used_bibs = {int(r['bib']) for r in riders.itervalues()}
+        used_series = {int(r['bib'])/10 for r in riders.values() if int(r['bib']) > 3010}
+        used_bibs = {int(r['bib']) for r in riders.values()}
 
         for classid, min_x, max_x in [(2, 301, 399), (3, 401, 499), (4, 601, 699)]:
-            classteams = [team for team in teams.itervalues() if int(team['class']) == classid]
+            classteams = [team for team in teams.values() if int(team['class']) == classid]
             series_to_use = [i for i in range(max_x, min_x-1, -1) if i not in used_series]
             for team in classteams:
                 teambibs = [int(riders[nid]['bib']) for nid in team['riders'] if int(riders[nid]['bib']) > 0]
@@ -346,7 +346,7 @@ class CmdProposeBib:
                 else:
                     # At least one bib is set
                     team_series = {int(b)/10 for b in teambibs}
-                    print team_series
+                    print(team_series)
                     if len(team_series) > 1:
                         # Uh-oh, something weird is going on. Giving up!
                         for rider_nid in team['riders']:
@@ -398,23 +398,23 @@ class CmdProposeBib:
             for r in proposed:
                 # Arrgghhh!!! The data types are totally f***d up!
                 teamname = riders[str(r['nid'])]['team_name']
-                Log(u'{} ({}) #{}: proposed {}, {}'.format(r['name'],
+                Log('{} ({}) #{}: proposed {}, {}'.format(r['name'],
                                                            teamname,
                                                            self.formatBib(r['current_bib']),
                                                            r['proposed_bib'],
                                                            r['reason']))
             if setBib:
                 for r in proposed:
-                    print (u'Propose: Change bib of {} in '
+                    print(('Propose: Change bib of {} in '
                            'DB from {} to {}. Y/n?').format(r['name'],
                                                             self.formatBib(r['current_bib']),
-                                                            r['proposed_bib'])
+                                                            r['proposed_bib']))
                     resp = sys.stdin.readline().strip()
                     if len(resp) == 0 or resp == 'y' or resp == 'Y':
                         db_res = self.db.SetRiderBib(r['nid'], r['proposed_bib'])
-                        print u"Rider bib for %s set to %s" % (r['name'], db_res['bib'])
+                        print("Rider bib for %s set to %s" % (r['name'], db_res['bib']))
                     else:
-                        print u"Skipping %s" % r['name']
+                        print("Skipping %s" % r['name'])
 
         return 'OK'
 
@@ -427,7 +427,7 @@ class LapParse:
         riders = {nid : Rider(nid, info['bib'],
                               info['name'],
                               info['team_name'],
-                              info['team_nid']) for nid, info in res.iteritems()}
+                              info['team_nid']) for nid, info in res.items()}
 
         res = self.db.GetLaps()
         laps = []
@@ -462,7 +462,7 @@ class CmdGetLaps:
 
         lp = LapParse(self.db)
         laps = lp.getLaps()
-        laps_str = [ u'{}\t{}\t{}\t{}'.format(TimeFormat(l['timestamp']).long(),
+        laps_str = [ '{}\t{}\t{}\t{}'.format(TimeFormat(l['timestamp']).long(),
                                               l['bib'],
                                               l['name'],
                                               l['team']) for l in laps ]
@@ -496,7 +496,7 @@ class CmdTrend:
         # Create a list of tuples with
         # [(team_1_lap_1, team_2_lap_1, ...), (team_1_lap_2, ...)]
         ref_laps = [ ([l['timestamp'] for l in laps if l['team_nid'] == nid]) for nid in team_nid]
-        team_laps = zip(*ref_laps)
+        team_laps = list(zip(*ref_laps))
 
         Log(team_laps.__repr__())
 
@@ -522,13 +522,13 @@ cmds = [ CmdDeleteLaps, CmdDeleteBibs, CmdListRiders, CmdSetBib,
          CmdCreateConfig, CmdProposeBib, CmdGetLaps, CmdTrend ]
 
 def Usage():
-    print 'Usage: ka_cmd.py [-u url] [-n node_id] <command>'
-    print '-u url\tURL of server'
-    print '-n node_id\tNode ID of the race to upload data to'
-    print 'Commands:'
+    print('Usage: ka_cmd.py [-u url] [-n node_id] <command>')
+    print('-u url\tURL of server')
+    print('-n node_id\tNode ID of the race to upload data to')
+    print('Commands:')
 
     for cmdclass in cmds:
-        print '%s %s\t%s' % (cmdclass.name(), cmdclass.syntax(), cmdclass.describe())
+        print('%s %s\t%s' % (cmdclass.name(), cmdclass.syntax(), cmdclass.describe()))
 
 
 if __name__ == '__main__':
@@ -548,7 +548,7 @@ if __name__ == '__main__':
                 sys.exit(0)
 
     except getopt.GetoptError:
-        print 'Error in getopt.'
+        print('Error in getopt.')
         sys.exit(1)
     except ValueError:
         Usage()
@@ -570,7 +570,7 @@ if __name__ == '__main__':
                 Log(cmd.execute(args))
             except NetworkError:
                 Log('Command failed due to network error')
-            except xmlrpclib.Fault, error:
+            except xmlrpclib.Fault as error:
                 Log('Server error: %d %s' % (error.faultCode, error.faultString))
             break
     if not found:

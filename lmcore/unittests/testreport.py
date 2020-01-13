@@ -46,7 +46,7 @@ class TestReport(unittest.TestCase):
         persons[3] = person.Person(3, 'Carina')
         persons[4] = person.Person(4, 'David')
         teams = {}
-        for p in persons.itervalues():
+        for p in persons.values():
             teams[p.Number] = team.Team(CID, p.Name, [p.Number])
         self.config = config.Config(classes, persons, teams)
         self.Report = report.Report(self.config)

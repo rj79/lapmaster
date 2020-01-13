@@ -12,7 +12,7 @@
     :license: BSD, see LICENSE for more details.
 """
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import time
 import getopt
 import sys
@@ -24,12 +24,12 @@ url_root = "http://localhost:5000/static"
 output = "."
 
 def show_usage():
-    print "Usage %s -u <url> -o <output_dir> -i <interval>" % \
-        (os.path.basename(sys.argv[0]))
-    print "Restores race data."
-    print " -u\tThe base url of the backup location. Default: " + url_root
-    print " -o\tDirectory where to put the restored files. Default: " + output
-    print " -i\tRestore interval in seconds. Default: " + str(interval)
+    print("Usage %s -u <url> -o <output_dir> -i <interval>" % \
+        (os.path.basename(sys.argv[0])))
+    print("Restores race data.")
+    print(" -u\tThe base url of the backup location. Default: " + url_root)
+    print(" -o\tDirectory where to put the restored files. Default: " + output)
+    print(" -i\tRestore interval in seconds. Default: " + str(interval))
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "u:o:i:")
@@ -41,7 +41,7 @@ for o, a in opts:
     if o == '-o':
         output = a
         if not os.path.isdir(output):
-            print "No such directory: " % (output)
+            print("No such directory: " % (output))
             sys.exit(-1)
     if o == '-i':
         try:
@@ -51,7 +51,7 @@ for o, a in opts:
     if o == '-u':
         url_root = a
 
-httpOpener = urllib.URLopener()
+httpOpener = urllib.request.URLopener()
 
 while True:
     ok = True
@@ -60,15 +60,15 @@ while True:
         dst = "%s/%s" % (output, f)
         try:
             httpOpener.retrieve(url, dst)
-            print "Fetched %s" % (url)
+            print("Fetched %s" % (url))
         except IOError as err:
             ok = False
-            print err
+            print(err)
 
-    print "For full list of backups see %s/backups.html" % (url_root)
-    print "Waiting %d s" % (interval)
+    print("For full list of backups see %s/backups.html" % (url_root))
+    print("Waiting %d s" % (interval))
     try:
         time.sleep(interval)
     except KeyboardInterrupt:
-        print "\nGot keyboard interrupt"
+        print("\nGot keyboard interrupt")
         break

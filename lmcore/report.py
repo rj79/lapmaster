@@ -13,6 +13,27 @@
 import lmcore
 from logger import Error, Note
 
+# For transition for Python2
+def cmp_to_key(mycmp):
+    'Convert a cmp= function into a key= function'
+    class K:
+        def __init__(self, obj, *args):
+            self.obj = obj
+        def __lt__(self, other):
+            return mycmp(self.obj, other.obj) < 0
+        def __gt__(self, other):
+            return mycmp(self.obj, other.obj) > 0
+        def __eq__(self, other):
+            return mycmp(self.obj, other.obj) == 0
+        def __le__(self, other):
+            return mycmp(self.obj, other.obj) <= 0
+        def __ge__(self, other):
+            return mycmp(self.obj, other.obj) >= 0
+        def __ne__(self, other):
+            return mycmp(self.obj, other.obj) != 0
+    return K
+
+
 class LapInfo:
     def __init__(self):
         # The time at which the lap was registered
@@ -72,7 +93,7 @@ class TeamInfo:
     def get_latest_pass_time(self):
         if len(self.Laps) > 0:
             return self.Laps[-1].PassTime
-        return None
+        return 0
 
     def __str__(self):
         result = "Team={"
@@ -175,7 +196,7 @@ class Report:
             # Now that the lap is registered, we can update current rank for all teams
             rankList = []
             rank = 1
-            for t in sorted(self.Classes[classId].Teams.itervalues(), compareTeams):
+            for t in sorted(iter(self.Classes[classId].Teams.values()), key=cmp_to_key(compareTeams)):
                 if len(t.Laps) > 0:
                     t.Rank = rank
                     rank += 1

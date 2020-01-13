@@ -55,7 +55,7 @@ def get_options(parser):
         if not hasattr(options, 'l') or options.l == None:
             options.l = options.i + os.sep + LOGFILE
         else:
-            print options.l
+            print(options.l)
             options.l = LOGFILE
     else:
         if not hasattr(options, 'l'):

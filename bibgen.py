@@ -76,8 +76,8 @@ ctx = cairo.Context(surface)
 ctx.scale(WIDTH, WIDTH)
 
 def show_usage():
-    print("Usage %s -b <text> -i <image>" % \
-        (os.path.basename(sys.argv[0])))
+    print(("Usage %s -b <text> -i <image>" % \
+        (os.path.basename(sys.argv[0]))))
     print("Generates bibs for printing.")
     print(" -b\tText to print on the back side of each bib")
     print(" -i\tImage to display on each bib. Must be in png format.")
@@ -151,7 +151,7 @@ config = lmcore.configloader.loadConfig('classes.csv',
                                         'teams.csv')
 
 if config is None:
-    print "Errors in configuration. PDF not created."
+    print("Errors in configuration. PDF not created.")
     sys.exit(1)
 
 odd = True

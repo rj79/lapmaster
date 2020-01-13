@@ -40,10 +40,10 @@ descriptions = {'ms': "Men solo",
 bibs= []
 
 def show_usage():
-    print "Usage: %s [help] [ms=<count>] [ls=<count>] [t3m=<count>] [t3l=<count>] [t6m=<count>]" % (os.path.basename(sys.argv[0]))
-    print "Class Meaning        Default"
-    for k,v in descriptions.iteritems():
-        print "{:<5} {:<14} {}".format(k, v, options[k])
+    print("Usage: %s [help] [ms=<count>] [ls=<count>] [t3m=<count>] [t3l=<count>] [t6m=<count>]" % (os.path.basename(sys.argv[0])))
+    print("Class Meaning        Default")
+    for k,v in descriptions.items():
+        print("{:<5} {:<14} {}".format(k, v, options[k]))
 
 if len(sys.argv) < 2:
     show_usage()
@@ -59,18 +59,18 @@ for arg in sys.argv[1:]:
         key, value = arg.split('=')
     except:
         error = True
-        print "Could not interpret option %s" % (key)
+        print("Could not interpret option %s" % (key))
         continue
     if key in options:
         try:
             options[key] = int(value)
         except:
             error = True
-            print "Value of %s must be an integer" % (key)
+            print("Value of %s must be an integer" % (key))
             continue
     else:
         error = True
-        print "Unknown option %s" % (key)
+        print("Unknown option %s" % (key))
         continue
 
 if error:
@@ -93,16 +93,16 @@ warning = False
 for name in (CLASSFILE, PERSONFILE, TEAMFILE):
     if os.path.isfile(name):
         warning = True
-        print "Warning! {} already exists!".format(name)
+        print("Warning! {} already exists!".format(name))
 
 if warning:
-    if raw_input("The above configuration files already exist. Do you really want to overwrite? [y/N]: ").upper() != "Y":
-        print "Existing files untouched."
+    if input("The above configuration files already exist. Do you really want to overwrite? [y/N]: ").upper() != "Y":
+        print("Existing files untouched.")
         sys.exit(-1)
 
 
-for k,v in options.iteritems():
-    print "{:<14}: {}".format(descriptions[k], v)
+for k,v in options.items():
+    print("{:<14}: {}".format(descriptions[k], v))
 
 for i in range(101, 101 + MEN_SOLO):
     bibs.append(i)
@@ -129,7 +129,7 @@ with open(CLASSFILE, 'w') as f:
     f.write("2,3,Mixed 3\n")
     f.write("3,3,Dam 3\n")
     f.write("4,6,Mixed 6\n")
-print "Created %s" % (CLASSFILE)
+print("Created %s" % (CLASSFILE))
 
 with open(PERSONFILE, 'w') as f:
     for i in bibs:
@@ -137,7 +137,7 @@ with open(PERSONFILE, 'w') as f:
             f.write("s,%d,%d,Person %d\n" % (classId(i), i, i))
         else:
             f.write("%d,Person %d\n" % (i, i))
-print "Created %s" % (PERSONFILE)
+print("Created %s" % (PERSONFILE))
 
 teams = {}
 for bib in bibs:
@@ -155,4 +155,4 @@ with open(TEAMFILE, 'w') as f:
         text += "\n"
         f.write(text)
 
-print "Created %s" % (TEAMFILE)
+print("Created %s" % (TEAMFILE))

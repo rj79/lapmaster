@@ -15,7 +15,7 @@ class Config:
         self.Teams = teams
 
     def getClassIdList(self):
-        return self.Classes.keys()
+        return list(self.Classes.keys())
 
     def getClassNameById(self, classId):
         return self.Classes[classId].Name
@@ -29,7 +29,7 @@ class Config:
 
     def getPersonBibList(self):
         bibList = []
-        for k, person in self.Persons.iteritems():
+        for k, person in self.Persons.items():
             bibList.append(person.Number)
         bibList.sort()
         return bibList
@@ -46,35 +46,35 @@ class Config:
         return self.Classes[classId].isSolo()
 
     def getTeamIdList(self):
-        return self.Teams.keys()
+        return list(self.Teams.keys())
 
     def getTeamIdByBib(self, bib):
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if team.isMember(bib):
                 return team.Id
 
     def getTeamNameByBib(self, bib):
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if bib in team.getBibList():
                 return team.Name
         return None
 
     def getTeamNameByTeamId(self, id):
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if team.Id == id:
                 return team.Name
         return None
 
     def getTeamIdsInClass(self, classId):
         result = []
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if team.ClassId == classId:
                 result.append(team.Id)
         return result
 
     def getTeamBibsByBib(self, bib):
         result = []
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if bib in team.getBibList():
                 result = team.getBibList()
                 break
@@ -82,7 +82,7 @@ class Config:
 
     def getTeamBibsByTeamId(self, teamId):
         result = []
-        for k, team in self.Teams.iteritems():
+        for k, team in self.Teams.items():
             if teamId == team.Id:
                 result = team.getBibList()
                 break

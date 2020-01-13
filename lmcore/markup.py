@@ -32,7 +32,7 @@ class MarkupNode:
         result = "<" + self.Tag
 
         if len(self.Attributes) > 0:
-            for key, value in self.Attributes.iteritems():
+            for key, value in self.Attributes.items():
                 result += " " + key + "=" + "\"" + value + "\""
 
         if self.Short:

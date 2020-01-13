@@ -23,13 +23,13 @@ backup_index = "backups.html"
 interval = 30
 
 def show_usage():
-    print "Usage %s -o <output_dir> -i <interval>" % \
-        (os.path.basename(sys.argv[0]))
-    print "Makes backup of race data with regular intervals."
-    print "An index of all backups (backups.html) is created in the output " + \
-        "directory."
-    print " -o\tWhere to place the backups. Usually the html directory."
-    print " -i\tBackup interval in seconds. Default: " + str(interval)
+    print("Usage %s -o <output_dir> -i <interval>" % \
+        (os.path.basename(sys.argv[0])))
+    print("Makes backup of race data with regular intervals.")
+    print("An index of all backups (backups.html) is created in the output " + \
+        "directory.")
+    print(" -o\tWhere to place the backups. Usually the html directory.")
+    print(" -i\tBackup interval in seconds. Default: " + str(interval))
 
 def add_line(f, url, text):
     f.write("<tr>")
@@ -40,7 +40,7 @@ def add_line(f, url, text):
 
 def copy(src, dst):
     shutil.copyfile(src, dst)
-    print "Copied %s to %s" % (src, dst)
+    print("Copied %s to %s" % (src, dst))
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], "o:i:")
@@ -53,7 +53,7 @@ for o, a in opts:
     if o == '-o':
         output = a
         if not os.path.isdir(output):
-            print "No such directory: " % (output)
+            print("No such directory: " % (output))
             sys.exit(-1)
     if o == '-i':
         try:
@@ -62,7 +62,7 @@ for o, a in opts:
             pass
 
 if output is None:
-    print "Specify an output directory"
+    print("Specify an output directory")
     show_usage()
     sys.exit(-1)
 
@@ -73,7 +73,7 @@ for src in files:
 
 while True:
     stamp = time.strftime("%Y-%m-%d_%H:%M:%S", time.gmtime())
-    print "Backup at %s" % (stamp)
+    print("Backup at %s" % (stamp))
     for src in files:
         dst = "%s/%s" % (output, src)
         copy(src, dst)
@@ -90,10 +90,10 @@ while True:
             add_line(f, backup, backup)
         f.write("</table></body></html>")
 
-    print "Waiting %d s" % (interval)
+    print("Waiting %d s" % (interval))
 
     try:
         time.sleep(interval)
     except KeyboardInterrupt:
-        print "\nGot keyboard interrupt"
+        print("\nGot keyboard interrupt")
         break

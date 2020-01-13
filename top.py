@@ -30,7 +30,7 @@ class JsObject(object):
 		return self.__dict__.__setitem__(name, val)
 
 	def __delitem__(self, name):
-		if self.__dict__.has_key(name):
+		if name in self.__dict__:
 			del self.__dict__[name]
 
 	def __getattr__(self, name):
@@ -91,7 +91,7 @@ def get_personal_top(config, report):
 
     summary = JsObject()
     summary.Data = []
-    for bib, info in bib2info.iteritems():
+    for bib, info in bib2info.items():
         info.LapCount = len(info.AllLaps)
         info.BestLaps = best_laps(info)
         summary.Data.append(info)
@@ -140,7 +140,7 @@ def find_dirs():
     return dirs
 
 def write_yearly_reports(summaries):
-    for year in summaries.keys():
+    for year in list(summaries.keys()):
         write_file("%d_person_top.csv" % (year),
                    get_best_laps_per_person_csv(summaries[year]))
         write_file("%d_total_top.csv" % (year),
@@ -150,7 +150,7 @@ def get_summaries():
     dirs = find_dirs()
     summaries = {}
     for d in sorted(dirs, key=lambda x: x.Year):
-        print "Processing %d in %s" % (d.Year, d.Dir)
+        print("Processing %d in %s" % (d.Year, d.Dir))
         config = lmcore.loadConfig(d.Dir + "/classes.csv",
                                    d.Dir + "/persons.csv",
                                    d.Dir + "/teams.csv")

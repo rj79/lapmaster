@@ -14,10 +14,10 @@ import getopt
 import sys
 from datetime import datetime
 import time
-import xmlrpclib
+import xmlrpc.client
 
 def Log(msg):
-    print '%s: %s' % (datetime.isoformat(datetime.now()), msg)
+    print('%s: %s' % (datetime.isoformat(datetime.now()), msg))
     pass
 
 class NetworkError(Exception):
@@ -36,7 +36,7 @@ class FileError(Exception):
 
 class RemoteDB:
     def __init__(self, url, password, race_id):
-        self.server = xmlrpclib.ServerProxy('%s/xmlrpc.php' % url)
+        self.server = xmlrpc.client.ServerProxy('%s/xmlrpc.php' % url)
         self.race_id = race_id
 
     def UploadData(self, data):

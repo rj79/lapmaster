@@ -1,18 +1,21 @@
-pyc = $(shell find . -name '*.pyc')
-srcs += *.py
-srcs += lmcore/*.py
+HOST_PYTHON=$(shell which python3)
 VENV=.venv
 PYTHON=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
 
-doc_srcs += doc/manual.md
-doc_target = doc/manual.html
+pyc=$(shell find . -name '*.pyc')
+srcs+=*.py
+srcs+=lmcore/*.py
 
-test_srcs += unittests/*.py
-test_srcs += lmcore/unittests/*.py
-test_srcs += db_utils/*.py
+doc_srcs+=doc/manual.md
+doc_target=doc/manual.html
+
+test_srcs+=unittests/*.py
+test_srcs+=lmcore/unittests/*.py
+test_srcs+=db_utils/*.py
 
 OK_TEST=.ok_test
+OK_PIP=.ok_pip
 OK_PACKAGES=.ok_packages
 OKS+=$(OK_VENV)
 OKS+=$(OK_PACKAGES)
@@ -33,7 +36,10 @@ $(OK_TEST): $(srcs) $(test_srcs) $(OK_PACKAGES)
 	touch $@
 
 $(VENV):
-	virtualenv $(VENV) && touch $@
+	$(HOST_PYTHON) -m venv $(VENV) && touch $@
+
+$(OK_PIP): $(OK_VENV)
+	$(PIP) install --upgrade pip && touch $@
 
 $(OK_PACKAGES): $(VENV) requirements.txt
 	$(PIP) install -r requirements.txt && touch $@

@@ -10,18 +10,18 @@
 
 import os
 import time
-import startinfo
+from . import startinfo
 try:
     import lockfile
 except:
-    print 'Can not import lockfile. You need to either\n' \
+    print('Can not import lockfile. You need to either\n' \
     'apt-get install python-lockfile (Ubuntu) or\n' \
-    'yum install python-lockfile (Fedora/RedHat/CentOS)'
+    'yum install python-lockfile (Fedora/RedHat/CentOS)')
     import sys
     sys.exit(1)
 
 import socket
-from logger import Error, Note
+from .logger import Error, Note
 
 ADDRESS = "localhost"
 PORT = 8008
@@ -184,7 +184,7 @@ class LogIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         try:
             result = list(self.Log.Events[self.Index])
             self.Index += 1

@@ -8,17 +8,17 @@
     :copyright: (c) 2016 by Dag Helstad.
     :license: BSD, see LICENSE for more details.
 """
-from db_base import *
+from .db_base import *
 import time
 import re
 
 def Usage():
-    print 'Usage: db_updload.py <-f input_file> <-u url> ' \
-        '<-n node_id> <-i interval>'
-    print '-f input_file\tRead laptime data from input_file'
-    print '-u url\tURL of server'
-    print '-n node_id\tNode ID of the race to upload data to'
-    print '-i interval [s]\tThe interval of data upload'
+    print('Usage: db_updload.py <-f input_file> <-u url> ' \
+        '<-n node_id> <-i interval>')
+    print('-f input_file\tRead laptime data from input_file')
+    print('-u url\tURL of server')
+    print('-n node_id\tNode ID of the race to upload data to')
+    print('-i interval [s]\tThe interval of data upload')
 
 def is_float(string):
     try:
@@ -93,11 +93,11 @@ class Uploader:
                 if len(res['messages']) > 0:
                     for msg in res['messages']:
                         Log(msg)
-        except xmlrpclib.Fault, error:
+        except xmlrpclib.Fault as error:
             Log('XMLRPC error: %d, %s' % (error.faultCode, error.faultString))
         except NetworkError:
             Log('Upload failed due to network error')
-        except IOError, error:
+        except IOError as error:
             Log('File could not be read: %s' % error.strerror)
 
 
@@ -120,7 +120,7 @@ if __name__ == '__main__':
             elif o == '-h':
                 Usage()
     except getopt.GetoptError:
-        print 'Error in getopt.'
+        print('Error in getopt.')
         sys.exit(1)
     except ValueError:
         Usage()
